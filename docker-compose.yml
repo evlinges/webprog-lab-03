@@ -1,0 +1,18 @@
+# База даних PostgreSQL для лабораторної роботи.
+# Піднімається однією командою: docker compose up -d
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: webprog-lab-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: webprog
+      POSTGRES_PASSWORD: webprog
+      POSTGRES_DB: rezanok_lab
+    ports:
+      - "5433:5432" # ззовні 5433, щоб не конфліктувати з локальним PostgreSQL на 5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

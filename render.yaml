@@ -1,0 +1,45 @@
+# Blueprint для розгортання на Render (https://render.com).
+# Описує вебсервіс Node.js + безкоштовну базу PostgreSQL. Render сам створить
+# ресурси за цим файлом (New → Blueprint → вкажи цей репозиторій).
+#
+# Нюанси безкоштовного тарифу: сервіс «засинає» після 15 хв без запитів
+# (перший запит потім ~хвилину), файлова система тимчасова (uploads/ зникають
+# після перезапуску), безкоштовна PostgreSQL діє 30 днів.
+databases:
+  - name: rezanok-db
+    databaseName: rezanok
+    user: rezanok
+    plan: free
+
+services:
+  - type: web
+    name: rezanok-api
+    runtime: node
+    plan: free
+    # prisma migrate deploy застосовує вже створені міграції без інтерактиву.
+    buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy
+    startCommand: node src/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rezanok-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      # Секрети генеруються Render автоматично й зберігаються в середовищі.
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_TTL
+        value: 15m
+      - key: JWT_REFRESH_TTL
+        value: 7d
+      # Домен фронтенду для CORS WebSocket. '*' — на час демонстрації.
+      - key: FRONTEND_URL
+        value: "*"
+      - key: MAX_FILE_SIZE_MB
+        value: 5
